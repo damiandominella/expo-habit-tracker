@@ -1,14 +1,15 @@
-import { Stack } from 'expo-router';
+import { IndieFlower_400Regular, useFonts } from '@expo-google-fonts/dev';
+import { SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 
 // Keep the splash screen visible while we fetch resources
-// SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  /*const [fontsLoaded] = useFonts({
-    'Caveat': 'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9SIc.ttf',
-    'Caveat-Bold': 'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjRV6SIc.ttf',
+  let [fontsLoaded] = useFonts({
+    IndieFlower_400Regular,
   });
 
   useEffect(() => {
@@ -24,12 +25,13 @@ export default function RootLayout() {
 
   if (!fontsLoaded) {
     return null;
-  }*/
+  }
 
   return (
     <View style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
     </View>
