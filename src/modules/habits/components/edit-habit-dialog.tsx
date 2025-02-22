@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Keyboard,
   Modal,
@@ -9,29 +9,40 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { Habit } from '../types';
 
-interface AddHabitDialogProps {
+interface EditHabitDialogProps {
+  habit: Habit | null;
   visible: boolean;
   onClose: () => void;
-  onAdd: (habitName: string) => void;
+  onEdit: (habitName: string) => void;
 }
 
-const AddHabitDialog = ({ visible, onClose, onAdd }: AddHabitDialogProps) => {
-  const [habitName, setHabitName] = useState('');
+const EditHabitDialog = ({
+  habit,
+  visible,
+  onClose,
+  onEdit,
+}: EditHabitDialogProps) => {
+  const [habitName, setHabitName] = useState(habit?.name || '');
 
   const handleAdd = () => {
     if (habitName.trim()) {
-      onAdd(habitName.trim());
+      onEdit(habitName.trim());
       setHabitName('');
       onClose();
     }
   };
 
+  useEffect(() => {
+    setHabitName(habit?.name || '');
+  }, [habit]);
+
   return (
     <Modal
-      visible={visible}
+      visible={visible && !!habit}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}
     >
       <TouchableWithoutFeedback
@@ -43,7 +54,7 @@ const AddHabitDialog = ({ visible, onClose, onAdd }: AddHabitDialogProps) => {
         <View style={styles.overlay}>
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
             <View style={styles.dialog}>
-              <Text style={styles.title}>Add New Habit</Text>
+              <Text style={styles.title}>Edit Habit</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter habit name"
@@ -63,7 +74,7 @@ const AddHabitDialog = ({ visible, onClose, onAdd }: AddHabitDialogProps) => {
                   onPress={handleAdd}
                 >
                   <Text style={[styles.buttonText, styles.addButtonText]}>
-                    Add
+                    Confirm
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -129,4 +140,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddHabitDialog;
+export default EditHabitDialog;

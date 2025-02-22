@@ -1,4 +1,3 @@
-import AddHabitDialog from '@/src/modules/habits/components/add-habit-dialog';
 import HabitHeader from '@/src/modules/habits/components/header';
 import { INITIAL_HABITS } from '@/src/modules/habits/config';
 import { Habit } from '@/src/modules/habits/types';
@@ -25,7 +24,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { HoldItem } from 'react-native-hold-menu';
 import Animated from 'react-native-reanimated';
+import EditHabitDialog from '../modules/habits/components/edit-habit-dialog';
 import SettingsMenu from '../modules/habits/components/settings-menu';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
@@ -43,7 +44,6 @@ export default function HabitTracker() {
 
   const [habits, setHabits] = useState<Habit[]>(INITIAL_HABITS);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [isAddHabitDialogVisible, setIsAddHabitDialogVisible] = useState(false);
 
   // Add refs for synchronized scrolling
   const daysScrollViewRef = useRef<ScrollView>(null);
@@ -56,9 +56,29 @@ export default function HabitTracker() {
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
+
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
   }, []);
+
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  const [isEditDialogVisible, setIsEditHabitDialogVisible] = useState(false);
+
+  const onEditHabit = (habitName: string) => {
+    if (selectedHabit) {
+      const updatedHabits = habits.map((habit) => {
+        if (habit.id === selectedHabit.id) {
+          return {
+            ...habit,
+            name: habitName,
+          };
+        }
+        return habit;
+      });
+      setHabits(updatedHabits);
+      saveHabits(updatedHabits);
+    }
+  };
 
   useEffect(() => {
     loadHabits();
@@ -151,6 +171,8 @@ export default function HabitTracker() {
     const updatedHabits = [...habits, newHabit];
     setHabits(updatedHabits);
     saveHabits(updatedHabits);
+
+    bottomSheetModalRef.current?.dismiss();
   };
 
   const renderDayRow = (day: number) => {
@@ -192,16 +214,31 @@ export default function HabitTracker() {
     return Array.from({ length: daysInMonth }, (_, i) => renderDayRow(i + 1));
   };
 
+  const isToday = (day: number) => {
+    const today = new Date();
+    return (
+      today.getDate() === day &&
+      today.getMonth() === currentDate.getMonth() &&
+      today.getFullYear() === currentDate.getFullYear()
+    );
+  };
+
   const renderDayNumbers = () => {
     const daysInMonth = getDaysInMonth(currentDate);
+
     return Array.from({ length: daysInMonth }, (_, i) => (
       <View key={i} style={[styles.dayNumberRow, { height: cellHeight }]}>
-        <Text style={styles.dayText}>{i + 1}</Text>
+        <Text
+          style={{ color: isToday(i + 1) ? 'red' : 'black' }}
+          className={isToday(i + 1) ? 'font-bold' : ''}
+        >
+          {i + 1}
+        </Text>
       </View>
     ));
   };
 
-  const snapPoints = useMemo(() => ['25%', '50%'], []);
+  const snapPoints = useMemo(() => ['50%', '90%'], []);
 
   return (
     <BottomSheetModalProvider>
@@ -211,12 +248,6 @@ export default function HabitTracker() {
             currentDate={currentDate}
             onSettingsOpened={handlePresentModalPress}
             onDateChange={setCurrentDate}
-          />
-
-          <AddHabitDialog
-            visible={isAddHabitDialogVisible}
-            onClose={() => setIsAddHabitDialogVisible(false)}
-            onAdd={addNewHabit}
           />
 
           <View style={styles.contentContainer}>
@@ -244,7 +275,27 @@ export default function HabitTracker() {
                         { width: cellWidth },
                       ]}
                     >
-                      <Text style={styles.habitHeader}>{habit.name}</Text>
+                      <HoldItem
+                        hapticFeedback="Light"
+                        items={[
+                          {
+                            text: 'Edit',
+                            icon: 'edit',
+                            onPress: () => {
+                              setSelectedHabit(habit);
+                              setIsEditHabitDialogVisible(true);
+                            },
+                          },
+                          {
+                            text: 'Delete',
+                            icon: 'trash',
+                            isDestructive: true,
+                            onPress: () => {},
+                          },
+                        ]}
+                      >
+                        <Text style={styles.habitHeader}>{habit.name}</Text>
+                      </HoldItem>
                     </View>
                   ))}
                 </View>
@@ -266,17 +317,22 @@ export default function HabitTracker() {
         onChange={handleSheetChanges}
         snapPoints={snapPoints}
         handleStyle={{ backgroundColor: '#f3f4f6' }}
+        enableDynamicSizing={false}
       >
-        <BottomSheetView
-          style={{ flex: 1, padding: 16, height: 400 }}
-          className="bg-gray-100"
-        >
-          {/* <HapticPressable onPress={() => setIsAddHabitDialogVisible(true)}>
-            <Text style={styles.habitHeader}>Create new</Text>
-          </HapticPressable> */}
-          <SettingsMenu />
+        <BottomSheetView className="bg-gray-100 p-4 flex-1">
+          <SettingsMenu
+            onAddNewHabit={addNewHabit}
+            onEraseAllData={clearHabits}
+          />
         </BottomSheetView>
       </BottomSheetModal>
+
+      <EditHabitDialog
+        visible={isEditDialogVisible}
+        onClose={() => setIsEditHabitDialogVisible(false)}
+        onEdit={onEditHabit}
+        habit={selectedHabit}
+      />
     </BottomSheetModalProvider>
   );
 }
@@ -327,9 +383,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
-  },
-  dayText: {
-    fontSize: 18,
   },
   habitCell: {
     justifyContent: 'center',
