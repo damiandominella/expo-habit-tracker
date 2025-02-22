@@ -1,4 +1,8 @@
-import { IndieFlower_400Regular, useFonts } from '@expo-google-fonts/dev';
+import {
+  CrimsonPro_400Regular,
+  CrimsonPro_600SemiBold,
+  useFonts,
+} from '@expo-google-fonts/dev';
 import { SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -9,7 +13,8 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   let [fontsLoaded] = useFonts({
-    IndieFlower_400Regular,
+    regular: CrimsonPro_400Regular,
+    semibold: CrimsonPro_600SemiBold,
   });
 
   useEffect(() => {

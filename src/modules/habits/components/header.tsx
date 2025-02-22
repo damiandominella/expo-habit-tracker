@@ -1,18 +1,12 @@
+import { HapticPressable } from '@/src/components/haptic-pressable';
 import { Ionicons } from '@expo/vector-icons';
 import { addMonths, format, subMonths } from 'date-fns';
 import React from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface HabitHeaderProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
-  onAddHabit: () => void;
   onReset: () => void;
 }
 
@@ -27,31 +21,27 @@ export default function HabitHeader(props: HabitHeaderProps) {
 
   return (
     <View style={styles.monthHeader}>
-      <TouchableOpacity
+      <HapticPressable
         onPress={() => navigateMonth('prev')}
         style={styles.monthButton}
       >
         <Ionicons name="chevron-back" size={24} color="#666" />
-      </TouchableOpacity>
+      </HapticPressable>
 
       <Text style={styles.monthTitle}>
         {format(props.currentDate, 'MMMM yyyy')}
       </Text>
 
-      <TouchableOpacity
+      <HapticPressable
         onPress={() => navigateMonth('next')}
         style={styles.monthButton}
       >
         <Ionicons name="chevron-forward" size={24} color="#666" />
-      </TouchableOpacity>
+      </HapticPressable>
 
-      <Pressable onPress={props.onAddHabit} style={styles.addHabitButton}>
-        <Text style={styles.addHabitText}>+</Text>
-      </Pressable>
-
-      <Pressable onPress={props.onReset} style={styles.addHabitButton}>
+      {/* <HapticPressable onPress={props.onReset} style={styles.addHabitButton}>
         <Text style={styles.addHabitText}>-</Text>
-      </Pressable>
+      </HapticPressable> */}
     </View>
   );
 }
@@ -68,7 +58,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   monthTitle: {
-    fontFamily: 'IndieFlower_400Regular',
+    fontFamily: 'regular',
     fontSize: 18,
     textAlign: 'center',
     marginHorizontal: 20,

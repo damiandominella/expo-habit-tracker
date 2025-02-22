@@ -1,8 +1,9 @@
+import { HapticPressable } from '@/src/components/haptic-pressable';
+import AddHabitDialog from '@/src/modules/habits/components/add-habit-dialog';
 import HabitHeader from '@/src/modules/habits/components/header';
 import { INITIAL_HABITS } from '@/src/modules/habits/config';
 import { Habit } from '@/src/modules/habits/types';
 import { Entypo } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDaysInMonth } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef, useState } from 'react';
@@ -31,6 +32,7 @@ export default function HabitTracker() {
 
   const [habits, setHabits] = useState<Habit[]>(INITIAL_HABITS);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isAddHabitDialogVisible, setIsAddHabitDialogVisible] = useState(false);
 
   // Add refs for synchronized scrolling
   const daysScrollViewRef = useRef<ScrollView>(null);
@@ -48,33 +50,33 @@ export default function HabitTracker() {
   };
 
   const loadHabits = async () => {
-    try {
-      const savedHabits = await AsyncStorage.getItem('habits');
-      if (savedHabits) {
-        const parsedHabits = JSON.parse(savedHabits);
-        // Ensure each habit has trackedByMonth structure
-        const migratedHabits = parsedHabits.map((habit: Habit) => {
-          if (!habit.trackedByMonth) {
-            const currentMonthKey = getMonthKey(new Date());
-            return {
-              ...habit,
-              trackedByMonth: {
-                [currentMonthKey]: new Array(31).fill(false),
-              },
-            };
-          }
-          return habit;
-        });
-        setHabits(migratedHabits);
-      }
-    } catch (error) {
-      console.error('Error loading habits:', error);
-    }
+    // try {
+    //   const savedHabits = await AsyncStorage.getItem('habits');
+    //   if (savedHabits) {
+    //     const parsedHabits = JSON.parse(savedHabits);
+    //     // Ensure each habit has trackedByMonth structure
+    //     const migratedHabits = parsedHabits.map((habit: Habit) => {
+    //       if (!habit.trackedByMonth) {
+    //         const currentMonthKey = getMonthKey(new Date());
+    //         return {
+    //           ...habit,
+    //           trackedByMonth: {
+    //             [currentMonthKey]: new Array(31).fill(false),
+    //           },
+    //         };
+    //       }
+    //       return habit;
+    //     });
+    //     setHabits(migratedHabits);
+    //   }
+    // } catch (error) {
+    //   console.error('Error loading habits:', error);
+    // }
   };
 
   const saveHabits = async (updatedHabits: Habit[]) => {
     try {
-      await AsyncStorage.setItem('habits', JSON.stringify(updatedHabits));
+      // await AsyncStorage.setItem('habits', JSON.stringify(updatedHabits));
     } catch (error) {
       console.error('Error saving habits:', error);
     }
@@ -82,7 +84,7 @@ export default function HabitTracker() {
 
   const clearHabits = async () => {
     try {
-      await AsyncStorage.removeItem('habits');
+      // await AsyncStorage.removeItem('habits');
       setHabits(INITIAL_HABITS);
     } catch (error) {
       console.error('Error clearing habits:', error);
@@ -114,11 +116,11 @@ export default function HabitTracker() {
     saveHabits(updatedHabits);
   };
 
-  const addNewHabit = () => {
+  const addNewHabit = (habitName: string) => {
     const monthKey = getMonthKey(currentDate);
     const newHabit: Habit = {
       id: habits.length + 1,
-      name: `habit ${habits.length + 1}`,
+      name: habitName,
       trackedByMonth: {
         [monthKey]: new Array(31).fill(false),
       },
@@ -137,7 +139,7 @@ export default function HabitTracker() {
           const monthData =
             habit.trackedByMonth[monthKey] || new Array(31).fill(false);
           return (
-            <AnimatedTouchable
+            <HapticPressable
               key={`${habit.id}-${day}`}
               style={[
                 styles.habitCell,
@@ -156,7 +158,7 @@ export default function HabitTracker() {
                   <Entypo name="check" size={24} />
                 </Text>
               )}
-            </AnimatedTouchable>
+            </HapticPressable>
           );
         })}
       </View>
@@ -182,9 +184,14 @@ export default function HabitTracker() {
       <View style={styles.container}>
         <HabitHeader
           currentDate={currentDate}
-          onAddHabit={addNewHabit}
           onReset={clearHabits}
           onDateChange={setCurrentDate}
+        />
+
+        <AddHabitDialog
+          visible={isAddHabitDialogVisible}
+          onClose={() => setIsAddHabitDialogVisible(false)}
+          onAdd={addNewHabit}
         />
 
         <View style={styles.contentContainer}>
@@ -212,6 +219,16 @@ export default function HabitTracker() {
                     <Text style={styles.habitHeader}>{habit.name}</Text>
                   </View>
                 ))}
+
+                <View
+                  style={[styles.habitHeaderContainer, { width: cellWidth }]}
+                >
+                  <HapticPressable
+                    onPress={() => setIsAddHabitDialogVisible(true)}
+                  >
+                    <Text style={styles.habitHeader}>Create new</Text>
+                  </HapticPressable>
+                </View>
               </View>
               <ScrollView
                 ref={daysScrollViewRef}
@@ -264,7 +281,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   habitHeader: {
-    fontFamily: 'IndieFlower_400Regular',
+    fontFamily: 'semibold',
     fontSize: 16,
     textAlign: 'center',
   },
@@ -278,7 +295,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
   },
   dayText: {
-    fontFamily: 'IndieFlower_400Regular',
+    fontFamily: 'regular',
     fontSize: 18,
   },
   habitCell: {
@@ -287,7 +304,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   habitMark: {
-    fontFamily: 'IndieFlower_400Regular',
+    fontFamily: 'regular',
     fontSize: 24,
     color: '#333',
   },

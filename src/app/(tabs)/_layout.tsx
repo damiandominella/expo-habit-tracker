@@ -15,7 +15,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarLabelStyle: { fontFamily: 'IndieFlower_400Regular' },
+          tabBarLabelStyle: { fontFamily: 'regular' },
           tabBarIcon: ({ color }) => (
             <SimpleLineIcons name="home" size={24} color={color} />
           ),
@@ -25,7 +25,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarLabelStyle: { fontFamily: 'IndieFlower_400Regular' },
+          tabBarLabelStyle: { fontFamily: 'regular' },
           tabBarIcon: ({ color }) => (
             <SimpleLineIcons name="settings" size={24} color={color} />
           ),
