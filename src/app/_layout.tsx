@@ -1,44 +1,18 @@
-import {
-  CrimsonPro_400Regular,
-  CrimsonPro_600SemiBold,
-  useFonts,
-} from '@expo-google-fonts/dev';
-import { SplashScreen, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import { View } from 'react-native';
-
-// Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import './../global.css';
 
 export default function RootLayout() {
-  let [fontsLoaded] = useFonts({
-    regular: CrimsonPro_400Regular,
-    semibold: CrimsonPro_600SemiBold,
-  });
-
-  useEffect(() => {
-    const prepare = async () => {
-      if (fontsLoaded) {
-        // Hide the splash screen after the fonts have loaded and the UI is ready
-        await SplashScreen.hideAsync();
-      }
-    };
-
-    prepare();
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
-
   return (
-    <View style={{ flex: 1 }}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </View>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#ddd' }}>
+      <View style={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+        </Stack>
+        <StatusBar style="auto" />
+      </View>
+    </GestureHandlerRootView>
   );
 }

@@ -7,7 +7,7 @@ import { StyleSheet, Text, View } from 'react-native';
 interface HabitHeaderProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
-  onReset: () => void;
+  onSettingsOpened: () => void;
 }
 
 export default function HabitHeader(props: HabitHeaderProps) {
@@ -20,49 +20,40 @@ export default function HabitHeader(props: HabitHeaderProps) {
   };
 
   return (
-    <View style={styles.monthHeader}>
+    <View className="flex items-center justify-between flex-row">
+      <View className="flex items-center justify-between flex-row gap-8">
+        <HapticPressable
+          onPress={() => navigateMonth('prev')}
+          style={styles.monthButton}
+        >
+          <Ionicons name="chevron-back" size={24} color="#666" />
+        </HapticPressable>
+
+        <Text className="font-bold text-center text-xl">
+          {format(props.currentDate, 'MMMM yyyy')}
+        </Text>
+
+        <HapticPressable
+          onPress={() => navigateMonth('next')}
+          style={styles.monthButton}
+        >
+          <Ionicons name="chevron-forward" size={24} color="#666" />
+        </HapticPressable>
+      </View>
+
       <HapticPressable
-        onPress={() => navigateMonth('prev')}
-        style={styles.monthButton}
+        onPress={props.onSettingsOpened}
+        style={styles.addHabitButton}
       >
-        <Ionicons name="chevron-back" size={24} color="#666" />
-      </HapticPressable>
-
-      <Text style={styles.monthTitle}>
-        {format(props.currentDate, 'MMMM yyyy')}
-      </Text>
-
-      <HapticPressable
-        onPress={() => navigateMonth('next')}
-        style={styles.monthButton}
-      >
-        <Ionicons name="chevron-forward" size={24} color="#666" />
-      </HapticPressable>
-
-      {/* <HapticPressable onPress={props.onReset} style={styles.addHabitButton}>
         <Text style={styles.addHabitText}>-</Text>
-      </HapticPressable> */}
+      </HapticPressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  monthHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomColor: '#ddd',
-    borderBottomWidth: 1,
-  },
   monthButton: {
     padding: 10,
-  },
-  monthTitle: {
-    fontFamily: 'regular',
-    fontSize: 18,
-    textAlign: 'center',
-    marginHorizontal: 20,
-    transform: [{ rotate: '-2deg' }],
   },
   addHabitButton: {
     width: 40,

@@ -1,12 +1,22 @@
-import { HapticPressable } from '@/src/components/haptic-pressable';
 import AddHabitDialog from '@/src/modules/habits/components/add-habit-dialog';
 import HabitHeader from '@/src/modules/habits/components/header';
 import { INITIAL_HABITS } from '@/src/modules/habits/config';
 import { Habit } from '@/src/modules/habits/types';
 import { Entypo } from '@expo/vector-icons';
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetView,
+} from '@gorhom/bottom-sheet';
 import { getDaysInMonth } from 'date-fns';
 import * as Haptics from 'expo-haptics';
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -16,6 +26,7 @@ import {
   View,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
+import SettingsMenu from '../modules/habits/components/settings-menu';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -37,6 +48,17 @@ export default function HabitTracker() {
   // Add refs for synchronized scrolling
   const daysScrollViewRef = useRef<ScrollView>(null);
   const numbersScrollViewRef = useRef<ScrollView>(null);
+
+  // ref
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  // callbacks
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
+  const handleSheetChanges = useCallback((index: number) => {
+    console.log('handleSheetChanges', index);
+  }, []);
 
   useEffect(() => {
     loadHabits();
@@ -139,7 +161,7 @@ export default function HabitTracker() {
           const monthData =
             habit.trackedByMonth[monthKey] || new Array(31).fill(false);
           return (
-            <HapticPressable
+            <AnimatedTouchable
               key={`${habit.id}-${day}`}
               style={[
                 styles.habitCell,
@@ -158,7 +180,7 @@ export default function HabitTracker() {
                   <Entypo name="check" size={24} />
                 </Text>
               )}
-            </HapticPressable>
+            </AnimatedTouchable>
           );
         })}
       </View>
@@ -179,70 +201,83 @@ export default function HabitTracker() {
     ));
   };
 
+  const snapPoints = useMemo(() => ['25%', '50%'], []);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <HabitHeader
-          currentDate={currentDate}
-          onReset={clearHabits}
-          onDateChange={setCurrentDate}
-        />
+    <BottomSheetModalProvider>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <HabitHeader
+            currentDate={currentDate}
+            onSettingsOpened={handlePresentModalPress}
+            onDateChange={setCurrentDate}
+          />
 
-        <AddHabitDialog
-          visible={isAddHabitDialogVisible}
-          onClose={() => setIsAddHabitDialogVisible(false)}
-          onAdd={addNewHabit}
-        />
+          <AddHabitDialog
+            visible={isAddHabitDialogVisible}
+            onClose={() => setIsAddHabitDialogVisible(false)}
+            onAdd={addNewHabit}
+          />
 
-        <View style={styles.contentContainer}>
-          {/* Fixed day number column with vertical scroll */}
-          <View style={styles.dayNumberColumn}>
-            <View style={styles.dayNumberHeader} />
-            <ScrollView
-              ref={numbersScrollViewRef}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            >
-              {renderDayNumbers()}
-            </ScrollView>
-          </View>
-
-          {/* Scrollable habits area */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.habitGrid}>
-              <View style={styles.headerRow}>
-                {habits.map((habit) => (
-                  <View
-                    key={habit.id}
-                    style={[styles.habitHeaderContainer, { width: cellWidth }]}
-                  >
-                    <Text style={styles.habitHeader}>{habit.name}</Text>
-                  </View>
-                ))}
-
-                <View
-                  style={[styles.habitHeaderContainer, { width: cellWidth }]}
-                >
-                  <HapticPressable
-                    onPress={() => setIsAddHabitDialogVisible(true)}
-                  >
-                    <Text style={styles.habitHeader}>Create new</Text>
-                  </HapticPressable>
-                </View>
-              </View>
+          <View style={styles.contentContainer}>
+            {/* Fixed day number column with vertical scroll */}
+            <View style={styles.dayNumberColumn}>
+              <View style={styles.dayNumberHeader} />
               <ScrollView
-                ref={daysScrollViewRef}
-                onScroll={handleScroll}
-                scrollEventThrottle={16}
+                ref={numbersScrollViewRef}
+                scrollEnabled={false}
                 showsVerticalScrollIndicator={false}
               >
-                <View style={styles.daysContainer}>{renderDays()}</View>
+                {renderDayNumbers()}
               </ScrollView>
             </View>
-          </ScrollView>
+
+            {/* Scrollable habits area */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.habitGrid}>
+                <View style={styles.headerRow}>
+                  {habits.map((habit) => (
+                    <View
+                      key={habit.id}
+                      style={[
+                        styles.habitHeaderContainer,
+                        { width: cellWidth },
+                      ]}
+                    >
+                      <Text style={styles.habitHeader}>{habit.name}</Text>
+                    </View>
+                  ))}
+                </View>
+                <ScrollView
+                  ref={daysScrollViewRef}
+                  onScroll={handleScroll}
+                  scrollEventThrottle={16}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <View style={styles.daysContainer}>{renderDays()}</View>
+                </ScrollView>
+              </View>
+            </ScrollView>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        onChange={handleSheetChanges}
+        snapPoints={snapPoints}
+        handleStyle={{ backgroundColor: '#f3f4f6' }}
+      >
+        <BottomSheetView
+          style={{ flex: 1, padding: 16, height: 400 }}
+          className="bg-gray-100"
+        >
+          {/* <HapticPressable onPress={() => setIsAddHabitDialogVisible(true)}>
+            <Text style={styles.habitHeader}>Create new</Text>
+          </HapticPressable> */}
+          <SettingsMenu />
+        </BottomSheetView>
+      </BottomSheetModal>
+    </BottomSheetModalProvider>
   );
 }
 
@@ -281,7 +316,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   habitHeader: {
-    fontFamily: 'semibold',
     fontSize: 16,
     textAlign: 'center',
   },
@@ -295,7 +329,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
   },
   dayText: {
-    fontFamily: 'regular',
     fontSize: 18,
   },
   habitCell: {
@@ -304,7 +337,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   habitMark: {
-    fontFamily: 'regular',
     fontSize: 24,
     color: '#333',
   },
